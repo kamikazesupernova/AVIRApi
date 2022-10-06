@@ -16,14 +16,11 @@ namespace AVIRApi.Migrations
                     ID = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     CreateTime = table.Column<DateTime>(type: "datetime2", nullable: false),
                     DetectTime = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    WinStartTime = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    WinEndTime = table.Column<DateTime>(type: "datetime2", nullable: false),
                     EventTime = table.Column<DateTime>(type: "datetime2", nullable: false),
                     CeaseTime = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    Category = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Ref = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Confidence = table.Column<int>(type: "int", nullable: false),
-                    Note = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Category = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Ref = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Note = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     ConnCount = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
@@ -32,20 +29,43 @@ namespace AVIRApi.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "ThreatProfiles",
+                columns: table => new
+                {
+                    ID = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    IncidentReportID = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Age = table.Column<long>(type: "bigint", nullable: false, defaultValue: 24L),
+                    LastSeen = table.Column<long>(type: "bigint", nullable: false, defaultValue: 6L),
+                    NumOccurences = table.Column<int>(type: "int", nullable: false, defaultValue: 4),
+                    LocationFrequency = table.Column<int>(type: "int", nullable: false, defaultValue: 1),
+                    Score = table.Column<double>(type: "float", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ThreatProfiles", x => x.ID);
+                    table.ForeignKey(
+                        name: "FK_ThreatProfiles_IncidentReports_IncidentReportID",
+                        column: x => x.IncidentReportID,
+                        principalTable: "IncidentReports",
+                        principalColumn: "ID",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Attach",
                 columns: table => new
                 {
                     ID = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     IncidentReportID = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Handle = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    FileName = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Type = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    ContentType = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Hash = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Handle = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    FileName = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Type = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    ContentType = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Hash = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Size = table.Column<int>(type: "int", nullable: false),
-                    Ref = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    ContentEncoding = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Content = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                    Ref = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    ContentEncoding = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Content = table.Column<string>(type: "nvarchar(max)", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -64,15 +84,15 @@ namespace AVIRApi.Migrations
                 {
                     ID = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     IncidentReportID = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Type = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    SW = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    AggrWin = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    GPSLatitude = table.Column<long>(type: "bigint", nullable: false),
-                    GPSLongitude = table.Column<long>(type: "bigint", nullable: false),
-                    VehicleStatus = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Type = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    SW = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    AggrWin = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    GPSLatitude = table.Column<double>(type: "float", nullable: false),
+                    GPSLongitude = table.Column<double>(type: "float", nullable: false),
+                    VehicleStatus = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     GPSSpeed = table.Column<long>(type: "bigint", nullable: false),
-                    GPSDirection = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    GPSDirection = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     EngineStatus = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
@@ -92,14 +112,14 @@ namespace AVIRApi.Migrations
                 {
                     ID = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     IncidentReportID = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Type = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    IP4 = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    IP6 = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Hostname = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    URL = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Proto = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    AttachHand = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Netname = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                    Type = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    IP4 = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    IP6 = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Hostname = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    URL = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Proto = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    AttachHand = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Netname = table.Column<string>(type: "nvarchar(max)", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -118,10 +138,10 @@ namespace AVIRApi.Migrations
                 {
                     ID = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     IncidentReportID = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Type = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Email = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Type = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Email = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Spoofed = table.Column<bool>(type: "bit", nullable: false),
-                    IP4 = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    IP4 = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Anonymised = table.Column<bool>(type: "bit", nullable: true)
                 },
                 constraints: table =>
@@ -155,6 +175,11 @@ namespace AVIRApi.Migrations
                 name: "IX_Target_IncidentReportID",
                 table: "Target",
                 column: "IncidentReportID");
+                
+            migrationBuilder.CreateIndex(
+                name: "IX_ThreatProfiles_IncidentReportID",
+                table: "ThreatProfiles",
+                column: "IncidentReportID");
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)
@@ -170,6 +195,9 @@ namespace AVIRApi.Migrations
 
             migrationBuilder.DropTable(
                 name: "Target");
+
+            migrationBuilder.DropTable(
+                name: "ThreatProfiles");
 
             migrationBuilder.DropTable(
                 name: "IncidentReports");

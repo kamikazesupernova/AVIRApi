@@ -6,13 +6,14 @@ namespace AVIRApi.Models
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]  
-        public Guid ID { get; set; }        
+        public Guid ID { get; set; }      
+        [ForeignKey("IncidentReport")]
         public Guid IncidentReportID { get; set; }
-        public long Age {get; private set;}
-        public long LastSeen { get; private set; }
-        public int NumOccurences { get; private set; }
-        public int LocationFrequency { get; private set; }
-        public double Score { get; private set; }
+        public long Age {get;  set;}
+        public long LastSeen { get;  set; }
+        public int NumOccurences { get;  set; }
+        public int LocationFrequency { get;  set; }
+        public double Score { get;  set; }
         
     }
 }

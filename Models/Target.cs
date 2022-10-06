@@ -7,6 +7,7 @@ namespace AVIRApi.Models
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]  
         public Guid ID { get; set; }
+        [ForeignKey("IncidentReport")]
         public Guid IncidentReportID { get; set; }
         public string Type { get; set; }
         public string Email { get; set; }

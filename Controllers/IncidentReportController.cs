@@ -6,6 +6,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using AVIRApi.Models;
+using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.Configuration;
 
 namespace AVIRApi.Controllers
 {
@@ -14,10 +16,12 @@ namespace AVIRApi.Controllers
     public class IncidentReportController : ControllerBase
     {
         private readonly IncidentContext _context;
+        private readonly IConfiguration _config;
 
-        public IncidentReportController(IncidentContext context)
+        public IncidentReportController(IncidentContext context, IConfiguration config)
         {
             _context = context;
+            _config = config;
         }
 
         // GET: api/IncidentReport
@@ -89,8 +93,22 @@ namespace AVIRApi.Controllers
           {
               return Problem("Entity set 'IncidentContext.IncidentReports'  is null.");
           }
+       
             _context.IncidentReports.Add(incidentReport);
+            
             await _context.SaveChangesAsync();
+
+                var threat = new ThreatProfile()
+                {
+                   IncidentReportID = incidentReport.ID
+                };
+
+            _context.ThreatProfiles.Add(threat);
+
+            await _context.SaveChangesAsync();
+
+            UpdateThreatProfile(threat, incidentReport);
+            CalculateScore(incidentReport);
 
             return CreatedAtAction(nameof(GetIncidentReport), new { id = incidentReport.ID }, incidentReport);
         }
@@ -119,5 +137,71 @@ namespace AVIRApi.Controllers
         {
             return (_context.IncidentReports?.Any(e => e.ID == id)).GetValueOrDefault();
         }
+        private async void UpdateThreatProfile(ThreatProfile threatProfile, IncidentReport incidentReport){
+            //calculates the decay of attribute               
+            System.Diagnostics.Debug.WriteLine(threatProfile.ID.ToString());
+            
+            var age = _context.IncidentReports
+                    .Where(x => x.ID == threatProfile.IncidentReportID)
+                    .Select(r => EF.Functions.DateDiffHour(r.DetectTime, DateTime.Now))
+                    .FirstOrDefault();
+
+
+            //finds the number of  hours since reports of this type were last seen
+            var lastseen = _context.IncidentReports
+                            .Where(typ => typ.Target.FirstOrDefault().Type == incidentReport.Target.FirstOrDefault().Type
+                            && typ.Source.FirstOrDefault().IP4 == incidentReport.Source.FirstOrDefault().IP4)
+                            .Select(r => EF.Functions.DateDiffHour(r.DetectTime, DateTime.Now)).Max();
+
+        
+           //count of recent occurrances
+            var occurrances =_context.IncidentReports
+                            .Where(typ => typ.Target.FirstOrDefault().Type == incidentReport.Target.FirstOrDefault().Type
+                            && typ.Source.FirstOrDefault().IP4 == incidentReport.Target.FirstOrDefault().Type).Count();
+
+            //count of location frequency 
+            var location =_context.IncidentReports
+                            .Where(n => n.Node.GPSLatitude == incidentReport.Node.GPSLatitude
+                             && n.Node.GPSLongitude == incidentReport.Node.GPSLongitude)
+                            .GroupBy(a => new {a.Node.GPSLatitude, a.Node.GPSLongitude})
+                            .Count();
+
+       
+            //rv = await _context.IncidentReports.FromSqlRaw(sql).ToListAsync();
+
+            var threatprofile = await _context.ThreatProfiles.FindAsync(threatProfile.ID);
+            if (threatprofile != null){
+
+                threatprofile.Age = Convert.ToInt32(age) * GetWeightage("Age")/100;
+                threatprofile.LastSeen = Convert.ToInt32(lastseen) * GetWeightage("LastSeen")/100;
+                threatprofile.NumOccurences = Convert.ToInt32(occurrances) * GetWeightage("NumOccurences")/100;
+                threatprofile.LocationFrequency = Convert.ToInt32(location) * GetWeightage("LocationFrequency")/100;
+
+               await _context.SaveChangesAsync();
+
+            }
+
+        }
+    private async void CalculateScore(IncidentReport incidentReport){
+
+            var threatprofile = await _context.ThreatProfiles.FindAsync(incidentReport.ID);
+            if (threatprofile != null){
+
+                threatprofile.Score = threatprofile.Age + threatprofile.LastSeen + threatprofile.NumOccurences + threatprofile.LocationFrequency;
+
+
+               await _context.SaveChangesAsync();
+
+            }
+    }
+    private int GetWeightage(string type){
+      
+
+       int result = Convert.ToInt32(_config.GetRequiredSection("Weightings").GetSection(type).Value);
+
+       return result;
+
+    }
+
     }
 }

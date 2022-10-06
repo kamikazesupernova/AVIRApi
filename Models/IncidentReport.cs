@@ -21,6 +21,7 @@ namespace AVIRApi.Models
         public ICollection<Target> Target { get; set; }
         public ICollection<Attach> Attach { get; set; }
         public Node Node { get; set; } = default!;
+        public ThreatProfile ThreatProfile { get; set; } = default!;
     
     }
 }

@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AVIRApi.Migrations
 {
     [DbContext(typeof(IncidentContext))]
-    [Migration("20220712175340_AVIRAPi.Models.IncidentContext5")]
-    partial class AVIRAPiModelsIncidentContext5
+    [Migration("20221002160126_InitialCreate")]
+    partial class InitialCreate
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -220,6 +220,43 @@ namespace AVIRApi.Migrations
                     b.ToTable("Target");
                 });
 
+            modelBuilder.Entity("AVIRApi.Models.ThreatProfile", b =>
+                {
+                    b.Property<Guid>("ID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<long>("Age")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasDefaultValue(24L);
+
+                    b.Property<Guid>("IncidentReportID")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<long>("LastSeen")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasDefaultValue(6L);
+
+                    b.Property<int>("LocationFrequency")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(1);
+
+                    b.Property<int>("NumOccurences")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(4);
+
+                    b.Property<double>("Score")
+                        .HasColumnType("float");
+
+                    b.HasKey("ID");
+
+                    b.ToTable("ThreatProfiles");
+                });
+
             modelBuilder.Entity("AVIRApi.Models.Attach", b =>
                 {
                     b.HasOne("AVIRApi.Models.IncidentReport", null)
@@ -256,6 +293,15 @@ namespace AVIRApi.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("AVIRApi.Models.ThreatProfile", b =>
+                {
+                    b.HasOne("AVIRApi.Models.IncidentReport", null)
+                        .WithOne("ThreatProfile")
+                        .HasForeignKey("AVIRApi.Models.ThreatProfile", "IncidentReportID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("AVIRApi.Models.IncidentReport", b =>
                 {
                     b.Navigation("Attach");
@@ -265,6 +311,8 @@ namespace AVIRApi.Migrations
                     b.Navigation("Source");
 
                     b.Navigation("Target");
+
+                    b.Navigation("ThreatProfile");
                 });
 #pragma warning restore 612, 618
         }
